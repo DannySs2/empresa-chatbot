@@ -1,0 +1,14 @@
+FROM ghcr.io/open-webui/open-webui:main
+
+COPY logo.png /app/build/static/logo.png
+COPY favicon.png /app/build/static/favicon.png
+COPY favicon-96x96.png /app/build/static/favicon-96x96.png
+COPY apple-touch-icon.png /app/build/static/apple-touch-icon.png
+
+# Replace splash images (these are the actual header logos)
+COPY logo.png /app/build/static/splash.png
+COPY logo.png /app/build/static/splash-dark.png
+
+COPY custom.css /tmp/custom.css
+COPY inject-css.py /tmp/inject-css.py
+RUN python3 /tmp/inject-css.py && rm /tmp/custom.css /tmp/inject-css.py

@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: empresa_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: empresa
+      POSTGRES_PASSWORD: empresa_pass
+      POSTGRES_DB: empresa_chatbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U empresa -d empresa_chatbot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: empresa_ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_KEEP_ALIVE=-1   # Mantiene el modelo cargado entre consultas
+    volumes:
+      - ollama_data:/root/.ollama
+
+  open-webui:
+    image: horbath-webui:latest
+    container_name: empresa_webui
+    restart: unless-stopped
+    ports:
+      - "3001:8080"
+    environment:
+      OPENAI_API_BASE_URL: "http://host.docker.internal:3000/v1"
+      OPENAI_API_KEY: "no-se-valida-pero-hay-que-poner-algo"
+      ENABLE_OLLAMA_API: "false"
+      WEBUI_NAME: "Horbath AI"
+      WEBUI_DEFAULT_MODEL: "Horbath IA"
+      WEBUI_LOGO: "/static/logo.png"
+      RAG_FILE_MAX_SIZE: "0"
+      RAG_FILE_MAX_COUNT: "0"
+      RAG_ALLOWED_FILE_EXTENSIONS: ""
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - openwebui_data:/app/backend/data
+
+volumes:
+  pgdata:
+  ollama_data:
+  openwebui_data:
